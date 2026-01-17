@@ -6,59 +6,58 @@ return {
     priority = 1000,
     opts = {
       style = "night",
-      transparent = true,
+      transparent = true, -- Das aktiviert die Basis-Transparenz sauber
       styles = {
         sidebars = "transparent",
         floats = "transparent",
       },
+      -- Wir nutzen den eingebauten on_highlights Hook von Tokyonight
+      on_highlights = function(hl, c)
+      -- Hier kannst du spezifische Gruppen überschreiben, falls nötig
+      -- Das ist stabiler als eine separate Funktion
+      hl.NormalFloat = { bg = "none" }
+      hl.FloatBorder = { bg = "none" }
+      end,
     },
     config = function(_, opts)
     require("tokyonight").setup(opts)
-
-    -- Funktion, die den Hintergrund auf "NONE" setzt
-    local function apply_transparency()
-    local groups = {
-      "Normal", "NormalFloat", "NormalNC", "NvimTreeNormal",
-      "NeoTreeNormal", "NeoTreeNormalNC", "StatusLine",
-      "SignColumn", "Folded", "EndOfBuffer", "MsgArea",
-      "WhichKey", "WhichKeyFloat", "WinBar", "WinBarNC"
-    }
-    for _, group in ipairs(groups) do
-      vim.api.nvim_set_hl(0, group, { bg = "none", ctermbg = "none" })
-      end
-      end
-
-      -- Farbschema aktivieren
-      vim.cmd.colorscheme("tokyonight-night")
-
-      -- Transparenz sofort anwenden
-      apply_transparency()
-
-      -- Sicherstellen, dass es bei jedem Schema-Wechsel aktiv bleibt
-      vim.api.nvim_create_autocmd("ColorScheme", {
-        pattern = "*",
-        callback = apply_transparency,
-      })
-      end,
+    vim.cmd.colorscheme("tokyonight-night")
+    end,
   },
 
   -- 2. TREESITTER
   {
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
-    opts = {
-      ensure_installed = "all",
-      highlight = {
-        enable = true,
-        additional_vim_regex_highlighting = false,
-      },
-      indent = { enable = true },
-    },
+    -- 'lazy = false' und 'priority' sind hier gut, um es früh zu laden
+    lazy = false,
+    priority = 1000,
+    config = function()
+    -- Wir laden das Modul ERST HIER drinnen
+    local status_ok, configs = pcall(require, "nvim-treesitter.configs")
+    if not status_ok then
+      return
+      end
+
+      configs.setup({
+        ensure_installed = {
+          "python", "lua", "vim", "vimdoc", "query", "bash",
+          "markdown", "markdown_inline", "regex",
+          "css", "html", "javascript", "latex", "scss", "sql"
+        },
+        highlight = {
+          enable = true,
+          additional_vim_regex_highlighting = false,
+        },
+        indent = { enable = true },
+      })
+      end,
   },
 
   -- 3. NEO-TREE
   {
     "nvim-neo-tree/neo-tree.nvim",
+    dependencies = { "nvim-lua/plenary.nvim", "nvim-tree/nvim-web-devicons", "MunifTanjim/nui.nvim" },
     opts = {
       default_component_configs = {
         icon = {
@@ -77,7 +76,7 @@ return {
     opts = {
       options = {
         icons_enabled = true,
-        theme = "auto",
+        theme = "tokyonight", -- Explizit auf tokyonight setzen statt "auto"
         component_separators = "|",
         section_separators = "",
       },
@@ -85,16 +84,15 @@ return {
         lualine_x = {
           {
             function()
-            local msg = 'No LSP'
             local clients = vim.lsp.get_clients({ bufnr = 0 })
-            if next(clients) == nil then return msg end
-              local client_names = {}
+            if #clients == 0 then return 'No LSP' end
+              local names = {}
               for _, client in ipairs(clients) do
-                table.insert(client_names, client.name)
+                table.insert(names, client.name)
                 end
-                return 'LSP: ' .. table.concat(client_names, ', ')
+                return 'LSP: ' .. table.concat(names, ', ')
                 end,
-                icon = '🚀 ',
+                icon = '🚀',
                 color = { fg = '#7aa2f7', gui = 'bold' },
           },
           'encoding',
