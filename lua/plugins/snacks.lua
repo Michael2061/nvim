@@ -2,55 +2,63 @@ return {
 	"folke/snacks.nvim",
 	priority = 1000,
 	lazy = false,
-	opts = {
-		-- 1. DASHBOARD DEAKTIVIEREN (Löst den Konflikt mit dashboard-nvim)
-		dashboard = { enabled = false },
-
-		-- 2. RESTLICHE OPTIONEN BEIBEHALTEN
-		indent = { enabled = true, char = "│" },
-		notifier = { enabled = true, timeout = 3000 },
-		input = { enabled = true },
-		styles = {
-			notification = {
-				wo = { wrap = true },
+	opts = function()
+		return {
+			dashboard = {
+				enabled = true,
+				sections = {
+					-- 1. DEIN LOGO (Terminal-Emulation)
+					{
+						section = "terminal",
+						cmd = [[echo "           .
+          . .
+        ... ..
+     ..   ..  ..
+    ..     ..  ..
+   ..       ..  ..
+   ..            ..
+    ..          ..
+     ..        ..
+      ..      ..
+        ..  ..
+          .."]],
+						height = 10,
+						padding = 2,
+						indent = 2,
+					},
+					-- 2. SCHNELLSTART-TASTEN
+					{ section = "keys", gap = 1, padding = 1 },
+					-- 3. VERLAUF
+					{ section = "recent_files", indent = 2, padding = 1 },
+					-- 4. STARTUP ZEIT
+					{ section = "startup" },
+				},
 			},
-		},
-	},
+			-- Andere Module aktiv halten
+			notifier = { enabled = true, style = "fancy" },
+			explorer = { enabled = true },
+			picker = { enabled = true },
+			indent = { enabled = true, char = "│" },
+			input = { enabled = true },
+			scope = { enabled = true },
+			words = { enabled = true },
+		}
+	end,
+	-- Deine Keymaps
 	keys = {
-		{
-			"<leader>.",
-			function()
-			Snacks.scratch()
-			end,
-			desc = "Projekt Notizen",
-		},
-		{
-			"<leader>S",
-			function()
-			Snacks.scratch.select()
-			end,
-			desc = "Alle Notizen durchsuchen",
-		},
-		{
-			"<leader>nh",
-			function()
-			Snacks.notifier.show_history()
-			end,
-			desc = "Benachrichtigungs-Verlauf",
-		},
-		{
-			"<leader>bd",
-			function()
-			Snacks.bufdelete()
-			end,
-			desc = "Buffer schließen",
-		},
 		{
 			"<leader>gg",
 			function()
-			Snacks.lazygit()
+				Snacks.lazygit()
 			end,
 			desc = "LazyGit",
+		},
+		{
+			"<leader>.",
+			function()
+				Snacks.scratch()
+			end,
+			desc = "Notizen",
 		},
 	},
 }
