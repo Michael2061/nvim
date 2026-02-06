@@ -1,23 +1,23 @@
 return {
 	-- Hardtime: Zwingt dich zur Vim-Navigation
-	{
-		"m4xshen/hardtime.nvim",
-		dependencies = { "MunifTanjim/nui.nvim", "nvim-lua/plenary.nvim" },
-		opts = {
-			max_time = 1000,
-			max_count = 999999990,
-			allow_different_key = true,
-			disabled_keys = {
-				["<Up>"] = {},
-				["<Down>"] = {},
-				["<Left>"] = {},
-				["<Right>"] = {},
-				["j"] = {}, -- Erlaubt langes Drücken von j
-				["k"] = {}, -- Erlaubt langes Drücken von k
-			},
-			disabled_modes = { "i", "v" },
-		},
-	},
+	--	{
+	--		"m4xshen/hardtime.nvim",
+	--		dependencies = { "MunifTanjim/nui.nvim", "nvim-lua/plenary.nvim" },
+	--		opts = {
+	--			max_time = 1000,
+	--			max_count = 999999990,
+	--			allow_different_key = true,
+	--			disabled_keys = {
+	--				["<Up>"] = {},
+	--				["<Down>"] = {},
+	--				["<Left>"] = {},
+	--				["<Right>"] = {},
+	--				["j"] = {}, -- Erlaubt langes Drücken von j
+	--				["k"] = {}, -- Erlaubt langes Drücken von k
+	--			},
+	--			disabled_modes = { "i", "v" },
+	--		},
+	--	},
 
 	-- Screenkey: Zeigt deine Tastendrücke visuell an
 	{

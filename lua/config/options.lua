@@ -1,6 +1,8 @@
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 vim.opt.conceallevel = 2 -- Erlaubt Neovim, Symbole durch Icons zu ersetzen
+vim.opt.cpoptions:append("I")
+vim.opt.backspace = "indent,eol,start"
 
 local opt = vim.opt
 
