@@ -2,22 +2,7 @@
 -- NEOVIM HAUPTKONFIGURATION (init.lua)
 -- =============================================================================
 
-vim.g.loaded_ruby_provider = 0
-vim.g.loaded_perl_provider = 0
-vim.g.python3_host_prog = '/usr/bin/python3'
-
--- 1. LSP & WARNUNGEN DEAKTIVIEREN
--- Deaktiviert die lspconfig-Warnung für Neovim 0.11+
 vim.g.lspconfig_suppress_deprecation_warning = true
-
--- Falls Plugins die globale Variable ignorieren, Meldungen hart ausschalten:
-local silent_notify = function(msg, level, opts)
-	if msg:find("require('lspconfig')") or msg:find("deprecated") then
-		return
-	end
-	return vim.health.report_info and vim.health.report_info(msg) or print(msg)
-end
-vim.notify = silent_notify
 
 -- 2. GRUNDKONFIGURATION LADEN
 require("config.options")
@@ -25,7 +10,7 @@ require("config.keymaps")
 
 -- 3. LAZY.NVIM PLUGIN-MANAGER SETUP
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
 	vim.fn.system({
 		"git",
 		"clone",
@@ -56,11 +41,13 @@ require("lazy").setup("plugins", {
 -- Fügt einen schicken Notizblock oben in die aktuelle Datei ein
 vim.api.nvim_create_user_command("Notes", function()
 	local ft = vim.bo.filetype
-	local comment = "# " -- Standard für Python, Shell, Config
-	if ft == "lua" or ft == "cpp" then
+	local comment = "# "
+	if vim.tbl_contains({ "lua", "cpp", "c", "go", "rust", "zig", "nim", "sql" }, ft) then
 		comment = "-- "
-	elseif ft == "javascript" or ft == "typescript" then
+	elseif vim.tbl_contains({ "javascript", "typescript", "jsx", "tsx", "java", "kotlin", "dart", "php", "css" }, ft) then
 		comment = "// "
+	elseif ft == "html" then
+		comment = "<!-- "
 	end
 
 	local lines = {
@@ -100,23 +87,64 @@ end, {})
 vim.api.nvim_create_user_command("Cheatsheet", function()
 	local buf = vim.api.nvim_create_buf(false, true)
 	local content = {
-		"   NEOVIM SETUP CHEATSHEET ",
-		"======================================",
+		"   NEOVIM CHEATSHEET ",
+		"═══════════════════════════",
 		"",
-		" 📝 NOTIZEN & TODOS",
-		" ------------------------------------",
-		" :Notes          - Notiz-Block einfügen",
-		" <leader> .      - Projekt Notizzettel",
-		" <leader> S      - Alle Zettel suchen",
-		" <leader> st     - Alle Projekt-TODOs",
-		" <leader> lt     - Lokale TODO Liste",
-		"",
-		" 🛠 TOOLS & NAVIGATION",
-		" ------------------------------------",
-		" <leader> gg     - LazyGit öffnen",
-		" <leader> nh     - Benachrichtigungen",
+		" 📁 DATEIEN & BUFFER",
+		" ----------------------------",
+		" <leader> ff     - Dateien suchen",
+		" <leader> fg     - Text suchen (Grep)",
+		" <leader> fb     - Geöffnete Buffer",
+		" <leader> e      - Datei-Explorer",
+		" <leader> w      - Speichern",
+		" <leader> q      - Beenden",
 		" <leader> bd     - Buffer schließen",
+		" <Tab> / S-Tab   - Buffer wechseln",
+		"",
+		" 🔧 GIT",
+		" ----------------------------",
+		" <leader> gg     - LazyGit",
+		" <leader> gd     - Git Diff",
+		" ]c / [c         - Nächste/vorherige Änderung",
+		" <leader> hp     - Änderung ansehen",
+		" <leader> hb     - Git Blame",
+		" <leader> hr     - Änderung rückgängig",
+		"",
+		" 🛠 EDITOR",
+		" ----------------------------",
+		" <leader> cf     - Manuell formatieren",
+		" <leader> uf     - Auto-Format umschalten",
+		" <leader> a      - AutoSave umschalten",
+		" <leader> ca     - Code Action",
+		" <leader> tt     - Fehler anzeigen",
+		" <leader> sk     - Tastatur-Anzeige",
+		"",
+		" 📝 NOTIZEN & TODO",
+		" ----------------------------",
+		" :Notes           - Notiz-Block",
+		" <leader> .      - Notizzettel",
+		" <leader> st     - TODOs durchsuchen",
+		" <leader> lt     - Lokale TODOs",
+		" <leader> nn     - Daily Note",
+		" <leader> ns     - Notizen suchen",
 		" :MakeNotes      - README Vorlage",
+		"",
+		" 🐛 DEBUG",
+		" ----------------------------",
+		" <leader> db     - Breakpoint",
+		" <leader> dc     - Start/Weiter",
+		" <leader> di     - Step Into",
+		" <leader> do     - Step Over",
+		" <F5>            - Continue",
+		"",
+		" 🔍 NAVIGATION",
+		" ----------------------------",
+		" gd              - Gehe zu Definition",
+		" gr              - Referenzen",
+		" K               - Hover Info",
+		" <leader> rn     - Umbenennen",
+		" <leader> uu     - Undo History",
+		" <leader> qs     - Sitzung laden",
 		"",
 		" [ Drücke :q zum Schließen ]",
 	}
@@ -124,21 +152,29 @@ vim.api.nvim_create_user_command("Cheatsheet", function()
 	vim.api.nvim_buf_set_lines(buf, 0, -1, false, content)
 	vim.api.nvim_open_win(buf, true, {
 		relative = "editor",
-		width = 50,
-		height = 22,
-		col = (vim.o.columns - 50) / 2,
-		row = (vim.o.lines - 22) / 2,
+		width = 52,
+		height = 40,
+		col = (vim.o.columns - 52) / 2,
+		row = (vim.o.lines - 40) / 2,
 		style = "minimal",
 		border = "rounded",
 	})
 end, {})
 
+-- Cheatsheet automatisch anzeigen, wenn nvim ohne Datei gestartet wird
+vim.api.nvim_create_autocmd("VimEnter", {
+	once = true,
+	callback = function()
+		if vim.fn.argc() == 0 then
+			vim.defer_fn(function()
+				vim.cmd("Cheatsheet")
+			end, 300)
+		end
+	end,
+})
+
 -- =============================================================================
 -- ZUSÄTZLICHE TASTENKÜRZEL
 -- =============================================================================
 
--- Schnellzugriff auf das Cheatsheet mit der F1-Taste
 vim.keymap.set("n", "<F1>", "<cmd>Cheatsheet<cr>", { desc = "Hilfe Cheatsheet" })
-
--- Schnellzugriff auf TODOs (Telescope)
-vim.keymap.set("n", "<leader>st", "<cmd>TodoTelescope<cr>", { desc = "Suche alle TODOs" })
